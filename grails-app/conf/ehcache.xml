@@ -111,7 +111,6 @@
     <cache name="annotation.AmTagTemplateAssociation" maxElementsInMemory="10000" timeToIdleSeconds="300" />
     <cache name="fm.FmFile" maxElementsInMemory="10000" timeToIdleSeconds="300" />
     <cache name="annotation.AmTagDisplayValue" maxElementsInMemory="10000" timeToIdleSeconds="300" />
-    <cache name="annotation.AmTagTemplate2" maxElementsInMemory="10000" timeToIdleSeconds="300" />
     <cache name="org.transmart.biomart.Observation" maxElementsInMemory="10000" timeToIdleSeconds="300" />
     <cache name="annotation.AmTagAssociation" maxElementsInMemory="10000" timeToIdleSeconds="300" />
     <cache name="annotation.AmTagItem" maxElementsInMemory="10000" timeToIdleSeconds="300" />
