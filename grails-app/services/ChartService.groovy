@@ -439,7 +439,7 @@ class ChartService {
                         max = max != null ? (v.max() != null && max < v.max() ? v.max() : max) : v.max()
                     }
                 }.each { k, v ->
-                    if (k && v.size()) set.addSeries(k, (double [])v.toArray(), 10, min, max)
+                    if (k && v.size()) set.addSeries(k, (double [])v.toArray(), bins, min, max)
                 }
 
                 chart = ChartFactory.createHistogram(title, xlabel, ylabel, set, PlotOrientation.VERTICAL, true, true, false)
