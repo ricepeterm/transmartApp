@@ -10,35 +10,23 @@ import org.jfree.chart.labels.BoxAndWhiskerToolTipGenerator
 import org.jfree.chart.plot.CategoryPlot
 import org.jfree.chart.plot.PlotOrientation
 import org.jfree.chart.plot.XYPlot
-import org.jfree.chart.renderer.category.BarRenderer
-import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer
-import org.jfree.chart.renderer.category.CategoryItemRendererState
-import org.jfree.chart.renderer.category.ScatterRenderer
-import org.jfree.chart.renderer.category.StandardBarPainter
+import org.jfree.chart.renderer.category.*
 import org.jfree.chart.renderer.xy.StandardXYBarPainter
 import org.jfree.chart.renderer.xy.XYBarRenderer
 import org.jfree.data.category.CategoryDataset
 import org.jfree.data.category.DefaultCategoryDataset
 import org.jfree.data.general.Dataset
 import org.jfree.data.general.DefaultPieDataset
-import org.jfree.data.statistics.BoxAndWhiskerCalculator
-import org.jfree.data.statistics.BoxAndWhiskerItem
-import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset
-import org.jfree.data.statistics.DefaultMultiValueCategoryDataset
-import org.jfree.data.statistics.HistogramDataset
-import org.jfree.data.statistics.MultiValueCategoryDataset
+import org.jfree.data.statistics.*
 import org.jfree.graphics2d.svg.SVGGraphics2D
 import org.jfree.ui.RectangleInsets
 import org.jfree.util.ShapeUtilities
-import org.transmartproject.core.dataquery.highdim.assayconstraints.AssayConstraint
-import org.transmartproject.core.dataquery.highdim.dataconstraints.DataConstraint
 import org.transmartproject.core.dataquery.highdim.projections.Projection
 import org.transmartproject.core.querytool.ConstraintByOmicsValue
 
 import java.awt.*
 import java.awt.geom.Ellipse2D
 import java.awt.geom.Rectangle2D
-
 /**
  * Created by Florian Guitton <f.guitton@imperial.ac.uk> on 17/12/2014.
  */
@@ -83,7 +71,7 @@ class ChartService {
         if (subsets[1].exists && subsets[2].exists)
             subsets.commons.patientIntersectionCount = i2b2HelperService.getPatientSetIntersectionSize(subsets[1].instance, subsets[2].instance)
 
-        // Lets prepare our subset shared diagrams, we will fill them later
+        // Let's prepare our subset shared diagrams, we will fill them later
         def ageHistogramHandle = [:]
         def agePlotHandle = [:]
 
@@ -95,9 +83,8 @@ class ChartService {
             i2b2HelperService.renderQueryDefinition(p.instance, "Query Summary for Subset ${n}", writer)
             p.query = output.toStringAndFlush()
 
-            // Lets fetch the patient count
+            // Let's fetch the patient count
             p.patientCount = i2b2HelperService.getPatientSetSize(p.instance)
-
             // Getting the age data
             p.ageData = i2b2HelperService.getPatientDemographicValueDataForSubset("AGE_IN_YEARS_NUM", p.instance).toList()
             if (p.ageData) {
@@ -120,7 +107,7 @@ class ChartService {
 
         }
 
-        // Lets build our age diagrams now that we have all the points in
+        // Let's build our age diagrams now that we have all the points in
         subsets.commons.ageHisto = getSVGChart(type: 'histogram', data: ageHistogramHandle, title: "Age")
         subsets.commons.agePlot = getSVGChart(type: 'boxplot', data: agePlotHandle, title: "Age")
 
@@ -183,13 +170,18 @@ class ChartService {
 
             result.commons.type = 'value'
 
-            // Lets prepare our subset shared diagrams, we will fill them later
+            // Let's prepare our subset shared diagrams, we will fill them later
             def conceptHistogramHandle = [:]
             def conceptPlotHandle = [:];
 
             result.findAll { n, p ->
                 p.exists
             }.each { n, p ->
+
+                if (p.instance != "")
+                    p.patientCount = i2b2HelperService.getPatientSetSize(p.instance)
+                else
+                    p.patientCount = i2b2HelperService.getPatientCountForConcept(concept)
 
                 // Getting the concept data
                 p.conceptData = i2b2HelperService.getConceptDistributionDataForValueConceptFromCode(result.commons.conceptCode, p.instance).toList()
@@ -198,7 +190,7 @@ class ChartService {
                 conceptPlotHandle["Subset $n"] = p.conceptStats
             }
 
-            // Lets build our concept diagrams now that we have all the points in
+            // Let's build our concept diagrams now that we have all the points in
             result.commons.conceptHisto = getSVGChart(type: 'histogram', data: conceptHistogramHandle, size: chartSize)
             result.commons.conceptPlot = getSVGChart(type: 'boxplot', data: conceptPlotHandle, size: chartSize)
 
@@ -249,6 +241,11 @@ class ChartService {
                         concept,
                         (p.instance == "" ? null : p.instance as Long)).collect {k, v -> v}
 
+                if (p.instance != "")
+                    p.patientCount = i2b2HelperService.getPatientSetSize(p.instance)
+                else
+                    p.patientCount = i2b2HelperService.getPatientCountForConcept(concept)
+
                 p.conceptStats = BoxAndWhiskerCalculator.calculateBoxAndWhiskerStatistics(p.conceptData)
                 conceptHistogramHandle["Subset $n"] = p.conceptData
                 conceptPlotHandle["Subset $n"] = p.conceptStats
@@ -293,12 +290,17 @@ class ChartService {
                 p.exists
             }.each { n, p ->
 
+                if (p.instance != "")
+                    p.patientCount = i2b2HelperService.getPatientSetSize(p.instance)
+                else
+                    p.patientCount = i2b2HelperService.getPatientCountForConcept(concept)
+
                 // Getting the concept data
                 p.conceptData = i2b2HelperService.getConceptDistributionDataForConcept(concept, p.instance)
                 p.conceptBar = getSVGChart(type: 'bar', data: p.conceptData, size: [width: 400, height: p.conceptData.size() * 15 + 80])
             }
 
-            // Lets calculate the χ² test if possible
+            // Let's calculate the χ² test if possible
             if (result[2].exists) {
 
                 def junction = false
@@ -360,6 +362,8 @@ class ChartService {
 
         // If no data is being sent we return an empty string
         if (data.isEmpty()) return ''
+        def nValues = 0;
+        def nKeys = 0;
 
         // We initialize a couple of objects that we are going to need
         Dataset set = null
@@ -411,9 +415,30 @@ class ChartService {
         switch (type) {
             case 'histogram':
 
+            // requires data values to set min/max
+            // can be called with empty values
+
+                data.each { k, v ->
+                    if (k) nKeys++;
+                    nValues += v.size();
+                }
+                if(nKeys == 0) return ''
+                if(nValues == 0) return ''
+
+                def min = null
+                def max = null
+
                 set = new HistogramDataset()
-                data.findAll { it.key && it.value }.each { k, v ->
-                    set.addSeries(k, (double [])v.toArray(), bins)
+//                data.findAll { it.key && it.value }.each { k, v ->
+//                    set.addSeries(k, (double [])v.toArray(), bins)
+//                }
+                data.each { k, v ->
+                    if(v.size()){
+                        min = min != null ? (v.min() != null && min > v.min() ? v.min() : min) : v.min()
+                        max = max != null ? (v.max() != null && max < v.max() ? v.max() : max) : v.max()
+                    }
+                }.each { k, v ->
+                    if (k && v.size()) set.addSeries(k, (double [])v.toArray(), bins, min, max)
                 }
 
                 chart = ChartFactory.createHistogram(title, xlabel, ylabel, set, PlotOrientation.VERTICAL, true, true, false)
@@ -430,6 +455,17 @@ class ChartService {
                 break;
 
             case 'boxplot':
+
+            // value is BoxAndWhiskerItem which has NaN if no values were given
+
+                data.each { k, v ->
+                    if (k) {
+                        nKeys++;
+                        if(!v.getMean().isNaN()) nValues++;
+                    }
+                }
+                if(nKeys == 0) return ''
+                if(nValues == 0) return ''
 
                 set = new DefaultBoxAndWhiskerCategoryDataset();
 
@@ -486,6 +522,13 @@ class ChartService {
 
             case 'pie':
 
+            // fails if given a null key (e.g. missing gender values)
+            
+                data.each { k, v ->
+                    if (k) nKeys++;
+                }
+                if(nKeys == 0) return ''
+
                 set = new DefaultPieDataset();
                 data.each { k, v ->
                     // Allow values for key '' to be passed on
@@ -507,12 +550,20 @@ class ChartService {
                 chart.plot.baseSectionOutlinePaint = new Color(213, 18, 42)
 
                 data.eachWithIndex { o, i ->
-                    chart.plot.setSectionPaint(o.key, new Color(213, 18, 42, (255 / (data.size() + 1) * (data.size() - i)).toInteger()))
+                    if(o.key){
+                        chart.plot.setSectionPaint(o.key, new Color(213, 18, 42, (255 / (data.size() + 1) * (data.size() - i)).toInteger()))
+                    }
                 }
 
                 break;
 
             case 'bar':
+
+            // skip any null keys
+                data.each { k, v ->
+                    if (k) nKeys++;
+                }
+                if(nKeys == 0) return ''
 
                 set = new DefaultCategoryDataset();
                 data.each { k, v ->

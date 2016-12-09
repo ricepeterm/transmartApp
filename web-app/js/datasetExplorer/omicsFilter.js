@@ -129,7 +129,8 @@ function addOmicsFilterAutocomplete() {
                 url: omics_filter_info.auto_complete_source,
                 dataType: "json",
                 data: {
-                    term : request.term,
+
+                    term : request.term == '' ? '%' : request.term,
                     concept_key : omics_filter_info.concept_key,
                     search_property : jQuery("#highdimension-search-property").find("option:selected").val()
                 },
@@ -138,6 +139,7 @@ function addOmicsFilterAutocomplete() {
                 }
             });
         },
+        minLength: 0,
         delay: 500,
         select: function(event, ui) {
             jQuery("#highdimension-filter-selector").val(ui.item.label);
@@ -157,7 +159,7 @@ function addOmicsFilterAutocomplete() {
         response: function(event, ui) {
             omicsAutoCompleteList = ui.content.map(function(item) {return item.label;});
         }
-    }).data("uiAutocomplete")._renderItem = function( ul, item ) {
+    }).data("ui-autocomplete")._renderItem = function( ul, item ) {
         var resulta = '<a><span class="category-gene"><b>' + item.label + '</b>';
         if (item.synonyms != null) {
             resulta += (item.synonyms + '</a>');
@@ -214,17 +216,18 @@ function addOmicsFilterMinMaxInputHandlers() {
     var minbox = jQuery("#highdimension-amount-min");
     var maxbox = jQuery("#highdimension-amount-max");
     minbox.blur(function(event) {
+        var slider = jQuery("#highdimension-range");
         var value = minbox.val();
         if (!jQuery.isNumeric(value)) {
-            minbox.val(omicsFilterValues[0]);
+            minbox.val(slider.slider('option','min'));
         }
-        else if (value < omicsFilterValues[0]) {
-            minbox.val(omicsFilterValues[0]);
+        else if (value < slider.slider('option','min')) {
+            minbox.val(slider.slider('option','min'));
         }
         else if (value > maxbox.val()) {
             minbox.val(maxbox.val());
         }
-        var slider = jQuery("#highdimension-range");
+
         slider.slider('values',0,minbox.val());
         jQuery("#highdimension-filter-subjectcount").html(omicsFilterValues.filter(function (el, idx, array) {return el >= minbox.val();})
             .filter(function(el, idx, array) {return el <= maxbox.val();})
@@ -235,17 +238,18 @@ function addOmicsFilterMinMaxInputHandlers() {
     });
 
     maxbox.blur(function(event) {
+        var slider = jQuery("#highdimension-range");
         var value = maxbox.val();
         if (!jQuery.isNumeric(value)) {
-            maxbox.val(omicsFilterValues[omicsFilterValues.length - 1]);
+            maxbox.val(slider.slider('option','max'));
         }
-        else if (value > omicsFilterValues[omicsFilterValues.length - 1]) {
-            maxbox.val(omicsFilterValues[omicsFilterValues.length - 1]);
+        else if (value > slider.slider('option','max')) {
+            maxbox.val(slider.slider('option','max'));
         }
         else if (value < minbox.val()) {
             maxbox.val(minbox.val());
         }
-        var slider = jQuery("#highdimension-range");
+
         slider.slider('values',1,maxbox.val());
         jQuery("#highdimension-filter-subjectcount").html(omicsFilterValues.filter(function (el, idx, array) {return el >= minbox.val();})
             .filter(function(el, idx, array) {return el <= maxbox.val();})
@@ -287,10 +291,14 @@ function omicsSliderUpdated(ui) {
     var max = slider.slider('option', 'max');
     omicsSliderLowHandleRatio = (low - min) / (max - min);
     omicsSliderHighHandleRatio = (high - min) / (max - min);
+    // there seems to be an issue with the slider not being able to reach its slider_max value completely
+    if (omicsSliderHighHandleRatio > 0.995) {
+        omicsSliderHighHandleRatio = 1.0;
+    }
     jQuery("#highdimension-amount-min").val(low.toFixed(3));
     jQuery("#highdimension-amount-max").val(high.toFixed(3));
-    jQuery("#highdimension-filter-subjectcount").html(omicsFilterValues.filter(function (el, idx, array) {return el >= low;})
-        .filter(function(el, idx, array) {return el <= high;})
+    jQuery("#highdimension-filter-subjectcount").html(omicsFilterValues.filter(function (el, idx, array) {return el >= parseFloat(low.toFixed(3));})
+        .filter(function(el, idx, array) {return el <= parseFloat(high.toFixed(3));})
         .length)
 }
 
@@ -311,7 +319,7 @@ function getOmicsFilterParams() {
             value: omics_filter_info.filter ? jQuery("#highdimension-amount-min").val() + ":" + jQuery("#highdimension-amount-max").val() : "",
             operator: omics_filter_info.filter ? "BETWEEN" : "",
             projection_type: jQuery("#highdimension-filter-projection").find("option:selected").val(),
-            projection_pretty_name: jQuery("#highdimension-filter-projection").find("option:selected").val(),
+            projection_pretty_name: jQuery("#highdimension-filter-projection").find("option:selected").text(),
             type: omics_filter_info.platform.markerType,
             hist_bins: omics_filter_info.filter ? jQuery("#highdimension-amount-bins").val() : ""
         };
@@ -362,11 +370,10 @@ function getOmicsFilterValueText(params)
     var result = "";
 
     switch (params.type) {
-        case "Gene Expression":
-        case "RNASEQ_RCNT":
-        case "PROTEOMICS":
-        case "MIRNA_QPCR":
-        case "Chromosomal":
+        case "VCF":
+            result = "Dummy VCF filter";
+            break;
+        default:
             switch (params.operator) {
                 case "BETWEEN":
                     var thresholds = params.value.split(":");
@@ -378,9 +385,6 @@ function getOmicsFilterValueText(params)
                     }
                     break;
             }
-            break;
-        case "VCF":
-            result = "Dummy VCF filter";
             break;
     }
     return "<em>" + result + "</em>";
@@ -452,11 +456,15 @@ function omicsValuesObtained(values) {
     if (omicsFilterValues.length > 0) {
         omicsFilterValues.sort(function (a, b) {return a - b}); // sort numerically rather than string-based
         var slider = jQuery("#highdimension-range");
-        slider.slider('option',{'min': omicsFilterValues[0],
-                                'max': omicsFilterValues[omicsFilterValues.length - 1],
-                                'step': (omicsFilterValues[omicsFilterValues.length - 1] - omicsFilterValues[0]) / omicsSliderSteps});
-        slider.slider('values', 0, omicsFilterValues[0] + omicsSliderLowHandleRatio * (omicsFilterValues[omicsFilterValues.length - 1] - omicsFilterValues[0]));
-        slider.slider('values', 1, omicsFilterValues[0] + omicsSliderHighHandleRatio * (omicsFilterValues[omicsFilterValues.length - 1] - omicsFilterValues[0]));
+        // add one slider step of room to min and max so we are sure to include all patients
+        var room = 2 * (omicsFilterValues[omicsFilterValues.length -1] - omicsFilterValues[0]) / omicsSliderSteps;
+        var slider_min = omicsFilterValues[0] - room;
+        var slider_max = omicsFilterValues[omicsFilterValues.length -1] + room;
+        slider.slider('option',{'min': slider_min,
+                                'max': slider_max,
+                                'step': (slider_max - slider_min) / omicsSliderSteps});
+        slider.slider('values', 0, slider_min + omicsSliderLowHandleRatio * (slider_max - slider_min));
+        slider.slider('values', 1, slider_min + omicsSliderHighHandleRatio * (slider_max - slider_min));
         omicsSliderUpdated(null);
         repopulateOmicsFilterRange();
     }
