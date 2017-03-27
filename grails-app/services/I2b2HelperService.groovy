@@ -385,7 +385,7 @@ class I2b2HelperService {
 
         if (xTrialsCaseFlag) {
 
-            def data = fetchAcrossTiralsData(concept_key,result_instance_id)
+            def data = fetchAcrossTrialsData(concept_key,result_instance_id)
             data.each {
                 def subject = it.subject
                 def value = it.value
@@ -1422,8 +1422,8 @@ class I2b2HelperService {
             }
         }
 
-    def fetchAcrossTiralsData(concept_key,result_instance_id){
-        log.debug "----------------- fetchAcrossTiralsData"
+    def fetchAcrossTrialsData(concept_key,result_instance_id){
+        log.debug "----------------- fetchAcrossTrialsData"
 
         def valueLeafNodeFlag = isValueConceptKey(concept_key)
         def dataList = []
@@ -1484,7 +1484,7 @@ class I2b2HelperService {
     def insertAcrossTrialsConceptDataIntoTable(columnid,concept_key,result_instance_id,valueLeafNodeFlag,tablein) {
         log.debug "----------------- insertAcrossTrialsConceptDataIntoTable <<<< ---- <<<<<"
 
-        def data = fetchAcrossTiralsData(concept_key,result_instance_id)
+        def data = fetchAcrossTrialsData(concept_key,result_instance_id)
         data.each{
             def subject = it.subject
             def value = it.value
