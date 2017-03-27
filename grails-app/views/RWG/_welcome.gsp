@@ -1,8 +1,15 @@
 <div style="text-align: center;">
     <div class="welcome"
          style="margin: 40px auto; background: #F4F4F4; border: 1px solid #DDD; padding: 20px; width: 400px; text-align: center; border-top-left-radius: 20px; border-bottom-right-radius: 20px">
-        <g:set var="projectName" value="${grailsApplication.config?.com?.recomdata?.projectName}"/>
+	<g:logMsg>Setting config variables</g:logMsg>
+	<g:set var="projectName" value="${grailsApplication.config?.com?.recomdata?.projectName}"/>
+        <g:set var="projectLogo" value="${grailsApplication.config?.com?.recomdata?.projectLogo}"/>
         <g:set var="providerName" value="${grailsApplication.config?.com?.recomdata?.providerName}"/>
+        <g:set var="providerLogo" value="${grailsApplication.config?.com?.recomdata?.providerLogo}"/>
+	<g:logMsg>Config projectName ${projectName}</g:logMsg>
+	<g:logMsg>Config projectLogo ${projectLogo}</g:logMsg>
+	<g:logMsg>Config providerName ${providerName}</g:logMsg>
+	<g:logMsg>Config providerLogo ${providerLogo}</g:logMsg>
         <p><b>Welcome to tranSMART <g:if test="${projectName}">for ${projectName}</g:if></b></p>
 
         <p>The <b>Browse</b> window lets you search and dive into the information contained in tranSMART,
@@ -13,24 +20,36 @@
 
         <p>The <b>Analyze</b> window lets you perform a number of analyses either on studies selected
         in the Browse window, or from the global search box located in the top ribbon of your screen.
-        More information about the analyses you can perform is available in the “Help ? section of the "Utilities" menu.
+        More information about the analyses you can perform is available in the “Help" section of the "Utilities" menu.
         </p>
         <br><br>
 
         <div>
             <g:if test="${projectName}">
-                <img src="${resource(dir: 'images', file: 'project_logo.png')}" alt="${projectName}"
-                     style="height:35px;vertical-align:middle;margin-bottom: 12px;">
+                <g:if test="${projectLogo}">
+                    <img src="${projectLogo}" alt="${projectName}"
+                         style="height:35px;vertical-align:middle;margin-bottom: 12px;">
+                </g:if>
+		<g:else>
+                    <img src="${resource(dir: 'images', file: 'project_logo.png')}" alt="${projectName}"
+                         style="height:35px;vertical-align:middle;margin-bottom: 12px;">
+                </g:else>
             </g:if>
             <g:if test="${projectName && providerName}">
                 <span style="font-size:20px;display: inline-block;line-height: 35px; height: 35px;">&nbsp;+&nbsp;</span>
             </g:if>
             <g:if test="${providerName}">
                 <a id="providerpowered" target="_blank" href="${grailsApplication.config?.com?.recomdata?.providerURL}"
-                   style="text-decoration: none;">
-                    <img src="${resource(dir: 'images', file: 'provider_logo.png')}" alt="${providerName}"
-                         style="height:35px;vertical-align:middle;margin-bottom: 12px;">
-                </a>
+                    style="text-decoration: none;">
+		    <g:if test="${providerLogo}">
+                        <img src="${providerLogo}" alt="${providerName}"
+                             style="height:35px;vertical-align:middle;margin-bottom: 12px;">
+                    </g:if>
+		    <g:else>
+		        <img src="${resource(dir: 'images', file: 'provider_logo.png')}" alt="${providerName}"
+                             style="height:35px;vertical-align:middle;margin-bottom: 12px;">
+		    </g:else>
+		</a>
             </g:if>
         </div>
     </div>
@@ -44,4 +63,5 @@
     </sec:ifAnyGranted>
 
     <br/><br/>
+    <g:logMsg>End of welcome page</g:logMsg>
 </div>

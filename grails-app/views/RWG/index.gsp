@@ -446,7 +446,9 @@
 <div id="main">
     <div id="folder-viewer">
         <div id="welcome-viewer">
+            <g:logMsg>Index Setting welcome template</g:logMsg>
             <tmpl:welcome/>
+            <g:logMsg>Index Done setting welcome template</g:logMsg>
         </div>
 
         <div id="metadata-viewer">
