@@ -67,7 +67,7 @@ class ChartService {
 
         // We need to run some common statistics first
         // This must be changed for multiple (>2) cohort selection
-        // We grab the intersection count for our two cohort
+        // We grab the intersection count for our two cohorts
         if (subsets[1].exists && subsets[2].exists)
             subsets.commons.patientIntersectionCount = i2b2HelperService.getPatientSetIntersectionSize(subsets[1].instance, subsets[2].instance)
 
@@ -361,7 +361,10 @@ class ChartService {
         def height = size?.height ?: 300
 
         // If no data is being sent we return an empty string
-        if (data.isEmpty()) return ''
+        if (data.isEmpty()) {
+            return ''
+        }
+
         def nValues = 0;
         def nKeys = 0;
 
@@ -422,8 +425,13 @@ class ChartService {
                     if (k) nKeys++;
                     nValues += v.size();
                 }
-                if(nKeys == 0) return ''
-                if(nValues == 0) return ''
+                if(nKeys == 0) {
+                    return ''
+                }
+
+                if(nValues == 0) {
+                    return ''
+                }
 
                 def min = null
                 def max = null
@@ -444,7 +452,7 @@ class ChartService {
                 chart = ChartFactory.createHistogram(title, xlabel, ylabel, set, PlotOrientation.VERTICAL, true, true, false)
                 chart.setChartParameters()
                 // If the first series (index 0) is related to 'Subset 2' i.s.o. 'Subset 1'
-                // (e.g. because 'Subset 1' is empty or if no data is avaialable for the given concept)
+                // (e.g. because 'Subset 1' is empty or if no data is available for the given concept)
                 // adjust the default coloring scheme
                 if (set.getSeriesCount()>0 && set.getSeriesKey(0) ==~ /.* 2/) {
                     chart.plot.renderer.setSeriesPaint(0, subset2SeriesColor)
@@ -464,8 +472,13 @@ class ChartService {
                         if(!v.getMean().isNaN()) nValues++;
                     }
                 }
-                if(nKeys == 0) return ''
-                if(nValues == 0) return ''
+                if(nKeys == 0) {
+                    return ''
+                }
+
+                if(nValues == 0) {
+                    return ''
+                }
 
                 set = new DefaultBoxAndWhiskerCategoryDataset();
 
@@ -478,7 +491,7 @@ class ChartService {
                 chart = ChartFactory.createBoxAndWhiskerChart(title, xlabel, ylabel, set, false)
                 chart.setChartParameters()
                 // If the first series (index 0) is related to 'Subset 2' i.s.o. 'Subset 1'
-                // (e.g. because 'Subset 1' is empty or if no data is avaialable for the given concept)
+                // (e.g. because 'Subset 1' is empty or if no data is available for the given concept)
                 // adjust the default coloring scheme
                 if (set.getRowCount()>0 && set.getRowKey(0) ==~ /.* 2/) {
                     chart.plot.renderer.setSeriesPaint(0, subset2SeriesColor)
@@ -527,7 +540,9 @@ class ChartService {
                 data.each { k, v ->
                     if (k) nKeys++;
                 }
-                if(nKeys == 0) return ''
+                if(nKeys == 0) {
+                    return ''
+                }
 
                 set = new DefaultPieDataset();
                 data.each { k, v ->
@@ -563,7 +578,9 @@ class ChartService {
                 data.each { k, v ->
                     if (k) nKeys++;
                 }
-                if(nKeys == 0) return ''
+                if(nKeys == 0) {
+                    return ''
+                }
 
                 set = new DefaultCategoryDataset();
                 data.each { k, v ->
@@ -588,6 +605,7 @@ class ChartService {
         result = (result =~ /<\?xml(.*)\?>/).replaceAll("")
         result = (result =~ /<!DOCTYPE(.*?)>/).replaceAll("")
         result = (result =~ /xmlns(.*?)="(.*?)"(\s*)/).replaceAll("")
+
         result
     }
 
