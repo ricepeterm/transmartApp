@@ -98,17 +98,17 @@ grails.project.dependency.resolution = {
             transitive = false
         }
 
-        test('junit:junit:4.11') {
-            transitive = false /* don't bring hamcrest */
-            export = false
-        }
+//        test('junit:junit:4.11') {
+//            transitive = false /* don't bring hamcrest */
+//            export = false
+//        }
 
-        test 'org.hamcrest:hamcrest-core:1.3',
-                'org.hamcrest:hamcrest-library:1.3'
+//        test 'org.hamcrest:hamcrest-core:1.3',
+//                'org.hamcrest:hamcrest-library:1.3'
 
-        test 'org.gmock:gmock:0.9.0-r435-hyve2', {
-            transitive = false
-        }
+//        test 'org.gmock:gmock:0.9.0-r435-hyve2', {
+//            transitive = false
+//        }
 
     }
 
@@ -158,7 +158,7 @@ grails.project.dependency.resolution = {
             runtime ':transmart-xnat-importer:16.2'
             runtime ':xnat-viewer:16.2'
 
-            test ':transmart-core-db-tests:16.2'
+//            test ':transmart-core-db-tests:16.2'
         } else {
             dm.internalDependencies delegate
         }
@@ -171,7 +171,7 @@ grails.project.dependency.resolution = {
 dm?.with {
     configureInternalPlugin 'compile', 'rdc-rmodules'
     configureInternalPlugin 'runtime', 'transmart-core'
-    configureInternalPlugin 'test', 'transmart-core-db-tests'
+//    configureInternalPlugin 'test', 'transmart-core-db-tests'
     configureInternalPlugin 'compile', 'transmart-gwas'
     configureInternalPlugin 'compile', 'transmart-gwas-plink'
     configureInternalPlugin 'compile', 'transmart-java'
