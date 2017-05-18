@@ -41,8 +41,9 @@ grails.project.dependency.resolution = {
 
     if (!dm) {
         repositories {
-            grailsCentral()
             mavenLocal()
+            mavenRepo "file://${System.getProperty('user.home')}/m2local/etriksv40"
+            grailsCentral()
             mavenCentral()
 
             mavenRepo "https://repo.transmartfoundation.org/content/repositories/public/"
@@ -87,7 +88,7 @@ grails.project.dependency.resolution = {
 
         /* for SAML authentication */
         compile('org.springframework.security.extensions:spring-security-saml2-core:1.0.0.RELEASE') {
-            //excludes of spring securirty necessary because they are for an older version (3.1 branch)
+            //excludes of spring security necessary because they are for an older version (3.1 branch)
             //also remove xercesImpl because it breaks tomcat and is not otherwise needed
             excludes 'spring-security-config', 'spring-security-core', 'spring-security-web', 'xercesImpl'
         }
@@ -134,7 +135,7 @@ grails.project.dependency.resolution = {
         compile ":codenarc:0.21"
 
         if (!dm) {
-            runtime ':smart-r:16.2-STABLE'
+            runtime ':smart-r:1.3-DSI'
             compile ':rdc-rmodules:16.2'
             runtime ':transmart-core:16.2'
             compile ':transmart-gwas:16.2'
